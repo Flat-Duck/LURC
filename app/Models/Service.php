@@ -2,36 +2,32 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use \DateTimeInterface;
 
 class Service extends Model
 {
-    use HasFactory;
+    use SoftDeletes;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array
-     */
+    public $table = 'services';
+
+    protected $dates = [
+        'created_at',
+        'updated_at',
+        'deleted_at',
+    ];
+
     protected $fillable = [
         'name',
         'price',
+        'created_at',
+        'updated_at',
+        'deleted_at',
     ];
 
-    /**
-     * The attributes that should be cast to native types.
-     *
-     * @var array
-     */
-    protected $casts = [
-        'id' => 'integer',
-        'price' => 'decimal:2',
-    ];
-
-
-    public function operations()
+    protected function serializeDate(DateTimeInterface $date)
     {
-        return $this->hasMany(\App\Models\Operation::class);
+        return $date->format('Y-m-d H:i:s');
     }
 }

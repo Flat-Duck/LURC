@@ -2,47 +2,74 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Admin\medicine;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\MassDestroyMedicineRequest;
+use App\Http\Requests\StoreMedicineRequest;
+use App\Http\Requests\UpdateMedicineRequest;
+use App\Models\Medicine;
+use Gate;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class MedicineController extends Controller
 {
-    /**
-     * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\Response
-     */
-    public function index(Request $request)
+    public function index()
     {
-        return view('medicines.index', compact('medicines'));
+        abort_if(Gate::denies('medicine_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        $medicines = Medicine::all();
+
+        return view('admin.medicines.index', compact('medicines'));
     }
 
-    /**
-     * @param \Illuminate\Http\Request $request
-     * @param \App\Admin\medicine $medicine
-     * @return \Illuminate\Http\Response
-     */
-    public function show(Request $request, Medicine $medicine)
+    public function create()
     {
-        return view('medicines.show', compact('medicines'));
+        abort_if(Gate::denies('medicine_create'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        return view('admin.medicines.create');
     }
 
-    /**
-     * @param \Illuminate\Http\Request $request
-     * @param \App\Admin\medicine $medicine
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(Request $request, Medicine $medicine)
+    public function store(StoreMedicineRequest $request)
     {
-        return view('medicines.edit', compact('medicines'));
+        $medicine = Medicine::create($request->all());
+
+        return redirect()->route('admin.medicines.index');
     }
 
-    /**
-     * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\Response
-     */
-    public function create(Request $request)
+    public function edit(Medicine $medicine)
     {
-        return view('medicines.create');
+        abort_if(Gate::denies('medicine_edit'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        return view('admin.medicines.edit', compact('medicine'));
+    }
+
+    public function update(UpdateMedicineRequest $request, Medicine $medicine)
+    {
+        $medicine->update($request->all());
+
+        return redirect()->route('admin.medicines.index');
+    }
+
+    public function show(Medicine $medicine)
+    {
+        abort_if(Gate::denies('medicine_show'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        return view('admin.medicines.show', compact('medicine'));
+    }
+
+    public function destroy(Medicine $medicine)
+    {
+        abort_if(Gate::denies('medicine_delete'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        $medicine->delete();
+
+        return back();
+    }
+
+    public function massDestroy(MassDestroyMedicineRequest $request)
+    {
+        Medicine::whereIn('id', request('ids'))->delete();
+
+        return response(null, Response::HTTP_NO_CONTENT);
     }
 }

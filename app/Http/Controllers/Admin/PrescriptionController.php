@@ -2,47 +2,92 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Admin\prescription;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\MassDestroyPrescriptionRequest;
+use App\Http\Requests\StorePrescriptionRequest;
+use App\Http\Requests\UpdatePrescriptionRequest;
+use App\Models\Doctor;
+use App\Models\Patient;
+use App\Models\Prescription;
+use Gate;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class PrescriptionController extends Controller
 {
-    /**
-     * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\Response
-     */
-    public function index(Request $request)
+    public function index()
     {
-        return view('prescriptions.index', compact('prescriptions'));
+        abort_if(Gate::denies('prescription_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        $prescriptions = Prescription::with(['doctor', 'patient'])->get();
+
+        $doctors = Doctor::get();
+
+        $patients = Patient::get();
+
+        return view('admin.prescriptions.index', compact('prescriptions', 'doctors', 'patients'));
     }
 
-    /**
-     * @param \Illuminate\Http\Request $request
-     * @param \App\Admin\prescription $prescription
-     * @return \Illuminate\Http\Response
-     */
-    public function show(Request $request, Prescription $prescription)
+    public function create()
     {
-        return view('prescriptions.show', compact('prescriptions'));
+        abort_if(Gate::denies('prescription_create'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        $doctors = Doctor::all()->pluck('name', 'id')->prepend(trans('global.pleaseSelect'), '');
+
+        $patients = Patient::all()->pluck('name', 'id')->prepend(trans('global.pleaseSelect'), '');
+
+        return view('admin.prescriptions.create', compact('doctors', 'patients'));
     }
 
-    /**
-     * @param \Illuminate\Http\Request $request
-     * @param \App\Admin\prescription $prescription
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(Request $request, Prescription $prescription)
+    public function store(StorePrescriptionRequest $request)
     {
-        return view('prescriptions.edit', compact('prescriptions'));
+        $prescription = Prescription::create($request->all());
+
+        return redirect()->route('admin.prescriptions.index');
     }
 
-    /**
-     * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\Response
-     */
-    public function create(Request $request)
+    public function edit(Prescription $prescription)
     {
-        return view('prescriptions.create');
+        abort_if(Gate::denies('prescription_edit'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        $doctors = Doctor::all()->pluck('name', 'id')->prepend(trans('global.pleaseSelect'), '');
+
+        $patients = Patient::all()->pluck('name', 'id')->prepend(trans('global.pleaseSelect'), '');
+
+        $prescription->load('doctor', 'patient');
+
+        return view('admin.prescriptions.edit', compact('doctors', 'patients', 'prescription'));
+    }
+
+    public function update(UpdatePrescriptionRequest $request, Prescription $prescription)
+    {
+        $prescription->update($request->all());
+
+        return redirect()->route('admin.prescriptions.index');
+    }
+
+    public function show(Prescription $prescription)
+    {
+        abort_if(Gate::denies('prescription_show'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        $prescription->load('doctor', 'patient', 'prescriptionEntries');
+
+        return view('admin.prescriptions.show', compact('prescription'));
+    }
+
+    public function destroy(Prescription $prescription)
+    {
+        abort_if(Gate::denies('prescription_delete'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        $prescription->delete();
+
+        return back();
+    }
+
+    public function massDestroy(MassDestroyPrescriptionRequest $request)
+    {
+        Prescription::whereIn('id', request('ids'))->delete();
+
+        return response(null, Response::HTTP_NO_CONTENT);
     }
 }

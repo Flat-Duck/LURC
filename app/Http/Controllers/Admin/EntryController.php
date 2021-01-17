@@ -2,47 +2,88 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Admin\entry;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\MassDestroyEntryRequest;
+use App\Http\Requests\StoreEntryRequest;
+use App\Http\Requests\UpdateEntryRequest;
+use App\Models\Entry;
+use App\Models\Medicine;
+use App\Models\Prescription;
+use Gate;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class EntryController extends Controller
 {
-    /**
-     * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\Response
-     */
-    public function index(Request $request)
+    public function index()
     {
-        return view('entries.index', compact('entries'));
+        abort_if(Gate::denies('entry_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        $entries = Entry::with(['medicine', 'prescription'])->get();
+
+        return view('admin.entries.index', compact('entries'));
     }
 
-    /**
-     * @param \Illuminate\Http\Request $request
-     * @param \App\Admin\entry $entry
-     * @return \Illuminate\Http\Response
-     */
-    public function show(Request $request, Entry $entry)
+    public function create()
     {
-        return view('entries.show', compact('entrie'));
+        abort_if(Gate::denies('entry_create'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        $medicines = Medicine::all()->pluck('name', 'id')->prepend(trans('global.pleaseSelect'), '');
+
+        $prescriptions = Prescription::all()->pluck('date', 'id')->prepend(trans('global.pleaseSelect'), '');
+
+        return view('admin.entries.create', compact('medicines', 'prescriptions'));
     }
 
-    /**
-     * @param \Illuminate\Http\Request $request
-     * @param \App\Admin\entry $entry
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(Request $request, Entry $entry)
+    public function store(StoreEntryRequest $request)
     {
-        return view('entries.edit', compact('entrie'));
+        $entry = Entry::create($request->all());
+
+        return redirect()->route('admin.entries.index');
     }
 
-    /**
-     * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\Response
-     */
-    public function create(Request $request)
+    public function edit(Entry $entry)
     {
-        return view('entries.create');
+        abort_if(Gate::denies('entry_edit'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        $medicines = Medicine::all()->pluck('name', 'id')->prepend(trans('global.pleaseSelect'), '');
+
+        $prescriptions = Prescription::all()->pluck('date', 'id')->prepend(trans('global.pleaseSelect'), '');
+
+        $entry->load('medicine', 'prescription');
+
+        return view('admin.entries.edit', compact('medicines', 'prescriptions', 'entry'));
+    }
+
+    public function update(UpdateEntryRequest $request, Entry $entry)
+    {
+        $entry->update($request->all());
+
+        return redirect()->route('admin.entries.index');
+    }
+
+    public function show(Entry $entry)
+    {
+        abort_if(Gate::denies('entry_show'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        $entry->load('medicine', 'prescription');
+
+        return view('admin.entries.show', compact('entry'));
+    }
+
+    public function destroy(Entry $entry)
+    {
+        abort_if(Gate::denies('entry_delete'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        $entry->delete();
+
+        return back();
+    }
+
+    public function massDestroy(MassDestroyEntryRequest $request)
+    {
+        Entry::whereIn('id', request('ids'))->delete();
+
+        return response(null, Response::HTTP_NO_CONTENT);
     }
 }

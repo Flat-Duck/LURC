@@ -2,47 +2,76 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Admin\material;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\MassDestroyMaterialRequest;
+use App\Http\Requests\StoreMaterialRequest;
+use App\Http\Requests\UpdateMaterialRequest;
+use App\Models\Material;
+use Gate;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class MaterialController extends Controller
 {
-    /**
-     * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\Response
-     */
-    public function index(Request $request)
+    public function index()
     {
-        return view('materials.index', compact('materials'));
+        abort_if(Gate::denies('material_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        $materials = Material::all();
+
+        return view('admin.materials.index', compact('materials'));
     }
 
-    /**
-     * @param \Illuminate\Http\Request $request
-     * @param \App\Admin\material $material
-     * @return \Illuminate\Http\Response
-     */
-    public function show(Request $request, Material $material)
+    public function create()
     {
-        return view('materials.show', compact('materials'));
+        abort_if(Gate::denies('material_create'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        return view('admin.materials.create');
     }
 
-    /**
-     * @param \Illuminate\Http\Request $request
-     * @param \App\Admin\material $material
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(Request $request, Material $material)
+    public function store(StoreMaterialRequest $request)
     {
-        return view('materials.edit', compact('materials'));
+        $material = Material::create($request->all());
+
+        return redirect()->route('admin.materials.index');
     }
 
-    /**
-     * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\Response
-     */
-    public function create(Request $request)
+    public function edit(Material $material)
     {
-        return view('materials.create');
+        abort_if(Gate::denies('material_edit'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        return view('admin.materials.edit', compact('material'));
+    }
+
+    public function update(UpdateMaterialRequest $request, Material $material)
+    {
+        $material->update($request->all());
+
+        return redirect()->route('admin.materials.index');
+    }
+
+    public function show(Material $material)
+    {
+        abort_if(Gate::denies('material_show'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        $material->load('materialExpenses');
+
+        return view('admin.materials.show', compact('material'));
+    }
+
+    public function destroy(Material $material)
+    {
+        abort_if(Gate::denies('material_delete'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        $material->delete();
+
+        return back();
+    }
+
+    public function massDestroy(MassDestroyMaterialRequest $request)
+    {
+        Material::whereIn('id', request('ids'))->delete();
+
+        return response(null, Response::HTTP_NO_CONTENT);
     }
 }

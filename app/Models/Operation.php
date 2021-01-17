@@ -2,18 +2,22 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use \DateTimeInterface;
 
 class Operation extends Model
 {
-    use HasFactory;
+    use SoftDeletes;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array
-     */
+    public $table = 'operations';
+
+    protected $dates = [
+        'created_at',
+        'updated_at',
+        'deleted_at',
+    ];
+
     protected $fillable = [
         'service_id',
         'doctor_id',
@@ -21,50 +25,28 @@ class Operation extends Model
         'lab',
         'price',
         'notes',
+        'created_at',
+        'updated_at',
+        'deleted_at',
     ];
 
-    /**
-     * The attributes that should be cast to native types.
-     *
-     * @var array
-     */
-    protected $casts = [
-        'id' => 'integer',
-        'service_id' => 'integer',
-        'doctor_id' => 'integer',
-        'patient_id' => 'integer',
-        'lab' => 'decimal:2',
-        'price' => 'decimal:2',
-    ];
-
-
-    public function service()
+    protected function serializeDate(DateTimeInterface $date)
     {
-        return $this->belongsTo(\App\Models\Service::class);
-    }
-
-    public function doctor()
-    {
-        return $this->belongsTo(\App\Models\Doctor::class);
-    }
-
-    public function patient()
-    {
-        return $this->belongsTo(\App\Models\Patient::class);
+        return $date->format('Y-m-d H:i:s');
     }
 
     public function service()
     {
-        return $this->belongsTo(\App\Models\Service::class);
+        return $this->belongsTo(Service::class, 'service_id');
     }
 
     public function doctor()
     {
-        return $this->belongsTo(\App\Models\Doctor::class);
+        return $this->belongsTo(Doctor::class, 'doctor_id');
     }
 
     public function patient()
     {
-        return $this->belongsTo(\App\Models\Patient::class);
+        return $this->belongsTo(Patient::class, 'patient_id');
     }
 }

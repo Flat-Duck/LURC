@@ -2,47 +2,74 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Admin\employee;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\MassDestroyEmployeeRequest;
+use App\Http\Requests\StoreEmployeeRequest;
+use App\Http\Requests\UpdateEmployeeRequest;
+use App\Models\Employee;
+use Gate;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class EmployeeController extends Controller
 {
-    /**
-     * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\Response
-     */
-    public function index(Request $request)
+    public function index()
     {
-        return view('employees.index', compact('employees'));
+        abort_if(Gate::denies('employee_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        $employees = Employee::all();
+
+        return view('admin.employees.index', compact('employees'));
     }
 
-    /**
-     * @param \Illuminate\Http\Request $request
-     * @param \App\Admin\employee $employee
-     * @return \Illuminate\Http\Response
-     */
-    public function show(Request $request, Employee $employee)
+    public function create()
     {
-        return view('employees.show', compact('employees'));
+        abort_if(Gate::denies('employee_create'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        return view('admin.employees.create');
     }
 
-    /**
-     * @param \Illuminate\Http\Request $request
-     * @param \App\Admin\employee $employee
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(Request $request, Employee $employee)
+    public function store(StoreEmployeeRequest $request)
     {
-        return view('employees.edit', compact('employees'));
+        $employee = Employee::create($request->all());
+
+        return redirect()->route('admin.employees.index');
     }
 
-    /**
-     * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\Response
-     */
-    public function create(Request $request)
+    public function edit(Employee $employee)
     {
-        return view('employees.create');
+        abort_if(Gate::denies('employee_edit'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        return view('admin.employees.edit', compact('employee'));
+    }
+
+    public function update(UpdateEmployeeRequest $request, Employee $employee)
+    {
+        $employee->update($request->all());
+
+        return redirect()->route('admin.employees.index');
+    }
+
+    public function show(Employee $employee)
+    {
+        abort_if(Gate::denies('employee_show'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        return view('admin.employees.show', compact('employee'));
+    }
+
+    public function destroy(Employee $employee)
+    {
+        abort_if(Gate::denies('employee_delete'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        $employee->delete();
+
+        return back();
+    }
+
+    public function massDestroy(MassDestroyEmployeeRequest $request)
+    {
+        Employee::whereIn('id', request('ids'))->delete();
+
+        return response(null, Response::HTTP_NO_CONTENT);
     }
 }

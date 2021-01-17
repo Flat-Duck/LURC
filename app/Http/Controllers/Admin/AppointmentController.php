@@ -2,47 +2,92 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Admin\appointment;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\MassDestroyAppointmentRequest;
+use App\Http\Requests\StoreAppointmentRequest;
+use App\Http\Requests\UpdateAppointmentRequest;
+use App\Models\Appointment;
+use App\Models\Doctor;
+use App\Models\Patient;
+use Gate;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class AppointmentController extends Controller
 {
-    /**
-     * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\Response
-     */
-    public function index(Request $request)
+    public function index()
     {
-        return view('appointments.index', compact('appointments'));
+        abort_if(Gate::denies('appointment_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        $appointments = Appointment::with(['doctor', 'patient'])->get();
+
+        $doctors = Doctor::get();
+
+        $patients = Patient::get();
+
+        return view('admin.appointments.index', compact('appointments', 'doctors', 'patients'));
     }
 
-    /**
-     * @param \Illuminate\Http\Request $request
-     * @param \App\Admin\appointment $appointment
-     * @return \Illuminate\Http\Response
-     */
-    public function show(Request $request, Appointment $appointment)
+    public function create()
     {
-        return view('appointments.show', compact('appointment'));
+        abort_if(Gate::denies('appointment_create'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        $doctors = Doctor::all()->pluck('name', 'id')->prepend(trans('global.pleaseSelect'), '');
+
+        $patients = Patient::all()->pluck('name', 'id')->prepend(trans('global.pleaseSelect'), '');
+
+        return view('admin.appointments.create', compact('doctors', 'patients'));
     }
 
-    /**
-     * @param \Illuminate\Http\Request $request
-     * @param \App\Admin\appointment $appointment
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(Request $request, Appointment $appointment)
+    public function store(StoreAppointmentRequest $request)
     {
-        return view('appointments.edit', compact('appointment'));
+        $appointment = Appointment::create($request->all());
+
+        return redirect()->route('admin.appointments.index');
     }
 
-    /**
-     * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\Response
-     */
-    public function create(Request $request)
+    public function edit(Appointment $appointment)
     {
-        return view('appointments.create');
+        abort_if(Gate::denies('appointment_edit'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        $doctors = Doctor::all()->pluck('name', 'id')->prepend(trans('global.pleaseSelect'), '');
+
+        $patients = Patient::all()->pluck('name', 'id')->prepend(trans('global.pleaseSelect'), '');
+
+        $appointment->load('doctor', 'patient');
+
+        return view('admin.appointments.edit', compact('doctors', 'patients', 'appointment'));
+    }
+
+    public function update(UpdateAppointmentRequest $request, Appointment $appointment)
+    {
+        $appointment->update($request->all());
+
+        return redirect()->route('admin.appointments.index');
+    }
+
+    public function show(Appointment $appointment)
+    {
+        abort_if(Gate::denies('appointment_show'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        $appointment->load('doctor', 'patient');
+
+        return view('admin.appointments.show', compact('appointment'));
+    }
+
+    public function destroy(Appointment $appointment)
+    {
+        abort_if(Gate::denies('appointment_delete'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        $appointment->delete();
+
+        return back();
+    }
+
+    public function massDestroy(MassDestroyAppointmentRequest $request)
+    {
+        Appointment::whereIn('id', request('ids'))->delete();
+
+        return response(null, Response::HTTP_NO_CONTENT);
     }
 }

@@ -2,55 +2,56 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use \DateTimeInterface;
 
 class Appointment extends Model
 {
-    use HasFactory;
+    use SoftDeletes;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array
-     */
+    public $table = 'appointments';
+
+    protected $dates = [
+        'date',
+        'created_at',
+        'updated_at',
+        'deleted_at',
+    ];
+
     protected $fillable = [
         'doctor_id',
         'patient_id',
         'date',
         'time',
+        'created_at',
+        'updated_at',
+        'deleted_at',
     ];
 
-    /**
-     * The attributes that should be cast to native types.
-     *
-     * @var array
-     */
-    protected $casts = [
-        'id' => 'integer',
-        'doctor_id' => 'integer',
-        'patient_id' => 'integer',
-        'date' => 'date',
-    ];
-
-
-    public function doctor()
+    protected function serializeDate(DateTimeInterface $date)
     {
-        return $this->belongsTo(\App\Models\Doctor::class);
-    }
-
-    public function patient()
-    {
-        return $this->belongsTo(\App\Models\Patient::class);
+        return $date->format('Y-m-d H:i:s');
     }
 
     public function doctor()
     {
-        return $this->belongsTo(\App\Models\Doctor::class);
+        return $this->belongsTo(Doctor::class, 'doctor_id');
     }
 
     public function patient()
     {
-        return $this->belongsTo(\App\Models\Patient::class);
+        return $this->belongsTo(Patient::class, 'patient_id');
+    }
+
+    public function getDateAttribute($value)
+    {
+        return $value ? Carbon::parse($value)->format(config('panel.date_format')) : null;
+    }
+
+    public function setDateAttribute($value)
+    {
+        $this->attributes['date'] = $value ? Carbon::createFromFormat(config('panel.date_format'), $value)->format('Y-m-d') : null;
     }
 }

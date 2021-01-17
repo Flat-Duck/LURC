@@ -2,53 +2,95 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\MediaLibrary\HasMedia\HasMedia;
+use Spatie\MediaLibrary\HasMedia\HasMediaTrait;
+use Spatie\MediaLibrary\Models\Media;
+use \DateTimeInterface;
 
-class Doctor extends Model
+class Doctor extends Model implements HasMedia
 {
-    use HasFactory;
+    use SoftDeletes, HasMediaTrait;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array
-     */
+    public $table = 'doctors';
+
+    protected $appends = [
+        'picture',
+    ];
+
+    const GENDER_SELECT = [
+        'male'   => 'ذكر',
+        'female' => 'أنثى',
+    ];
+
+    protected $dates = [
+        'birth_date',
+        'created_at',
+        'updated_at',
+        'deleted_at',
+    ];
+
     protected $fillable = [
         'name',
         'gender',
-        'picture',
         'phone',
         'email',
         'birth_date',
         'percentage',
         'specialty',
+        'created_at',
+        'updated_at',
+        'deleted_at',
     ];
 
-    /**
-     * The attributes that should be cast to native types.
-     *
-     * @var array
-     */
-    protected $casts = [
-        'id' => 'integer',
-        'birth_date' => 'date',
-        'percentage' => 'decimal:2',
-    ];
-
-
-    public function appointments()
+    protected function serializeDate(DateTimeInterface $date)
     {
-        return $this->hasMany(\App\Models\Appointment::class);
+        return $date->format('Y-m-d H:i:s');
     }
 
-    public function operations()
+    public function registerMediaConversions(Media $media = null)
     {
-        return $this->hasMany(\App\Models\Operation::class);
+        $this->addMediaConversion('thumb')->fit('crop', 50, 50);
+        $this->addMediaConversion('preview')->fit('crop', 120, 120);
     }
 
-    public function prescriptions()
+    public function doctorAppointments()
     {
-        return $this->hasMany(\App\Models\Prescription::class);
+        return $this->hasMany(Appointment::class, 'doctor_id', 'id');
+    }
+
+    public function doctorOperations()
+    {
+        return $this->hasMany(Operation::class, 'doctor_id', 'id');
+    }
+
+    public function doctorPrescriptions()
+    {
+        return $this->hasMany(Prescription::class, 'doctor_id', 'id');
+    }
+
+    public function getPictureAttribute()
+    {
+        $file = $this->getMedia('picture')->last();
+
+        if ($file) {
+            $file->url       = $file->getUrl();
+            $file->thumbnail = $file->getUrl('thumb');
+            $file->preview   = $file->getUrl('preview');
+        }
+
+        return $file;
+    }
+
+    public function getBirthDateAttribute($value)
+    {
+        return $value ? Carbon::parse($value)->format(config('panel.date_format')) : null;
+    }
+
+    public function setBirthDateAttribute($value)
+    {
+        $this->attributes['birth_date'] = $value ? Carbon::createFromFormat(config('panel.date_format'), $value)->format('Y-m-d') : null;
     }
 }

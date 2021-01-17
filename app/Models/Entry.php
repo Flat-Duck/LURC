@@ -2,53 +2,43 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use \DateTimeInterface;
 
 class Entry extends Model
 {
-    use HasFactory;
+    use SoftDeletes;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array
-     */
+    public $table = 'entries';
+
+    protected $dates = [
+        'created_at',
+        'updated_at',
+        'deleted_at',
+    ];
+
     protected $fillable = [
         'medicine_id',
         'prescription_id',
         'rx',
+        'created_at',
+        'updated_at',
+        'deleted_at',
     ];
 
-    /**
-     * The attributes that should be cast to native types.
-     *
-     * @var array
-     */
-    protected $casts = [
-        'id' => 'integer',
-        'medicine_id' => 'integer',
-        'prescription_id' => 'integer',
-    ];
-
-
-    public function medicine()
+    protected function serializeDate(DateTimeInterface $date)
     {
-        return $this->belongsTo(\App\Models\Medicine::class);
-    }
-
-    public function prescription()
-    {
-        return $this->belongsTo(\App\Models\Prescription::class);
+        return $date->format('Y-m-d H:i:s');
     }
 
     public function medicine()
     {
-        return $this->belongsTo(\App\Models\Medicine::class);
+        return $this->belongsTo(Medicine::class, 'medicine_id');
     }
 
     public function prescription()
     {
-        return $this->belongsTo(\App\Models\Prescription::class);
+        return $this->belongsTo(Prescription::class, 'prescription_id');
     }
 }

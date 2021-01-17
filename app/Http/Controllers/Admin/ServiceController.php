@@ -2,47 +2,74 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Admin\service;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\MassDestroyServiceRequest;
+use App\Http\Requests\StoreServiceRequest;
+use App\Http\Requests\UpdateServiceRequest;
+use App\Models\Service;
+use Gate;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class ServiceController extends Controller
 {
-    /**
-     * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\Response
-     */
-    public function index(Request $request)
+    public function index()
     {
-        return view('services.index', compact('services'));
+        abort_if(Gate::denies('service_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        $services = Service::all();
+
+        return view('admin.services.index', compact('services'));
     }
 
-    /**
-     * @param \Illuminate\Http\Request $request
-     * @param \App\Admin\service $service
-     * @return \Illuminate\Http\Response
-     */
-    public function show(Request $request, Service $service)
+    public function create()
     {
-        return view('services.show', compact('services'));
+        abort_if(Gate::denies('service_create'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        return view('admin.services.create');
     }
 
-    /**
-     * @param \Illuminate\Http\Request $request
-     * @param \App\Admin\service $service
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(Request $request, Service $service)
+    public function store(StoreServiceRequest $request)
     {
-        return view('services.edit', compact('services'));
+        $service = Service::create($request->all());
+
+        return redirect()->route('admin.services.index');
     }
 
-    /**
-     * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\Response
-     */
-    public function create(Request $request)
+    public function edit(Service $service)
     {
-        return view('services.create');
+        abort_if(Gate::denies('service_edit'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        return view('admin.services.edit', compact('service'));
+    }
+
+    public function update(UpdateServiceRequest $request, Service $service)
+    {
+        $service->update($request->all());
+
+        return redirect()->route('admin.services.index');
+    }
+
+    public function show(Service $service)
+    {
+        abort_if(Gate::denies('service_show'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        return view('admin.services.show', compact('service'));
+    }
+
+    public function destroy(Service $service)
+    {
+        abort_if(Gate::denies('service_delete'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        $service->delete();
+
+        return back();
+    }
+
+    public function massDestroy(MassDestroyServiceRequest $request)
+    {
+        Service::whereIn('id', request('ids'))->delete();
+
+        return response(null, Response::HTTP_NO_CONTENT);
     }
 }
