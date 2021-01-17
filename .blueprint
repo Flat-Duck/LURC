@@ -1,0 +1,122 @@
+created:
+    - app/Http/Controllers/Admin/DoctorController.php
+    - app/Http/Controllers/Admin/PatientController.php
+    - app/Http/Controllers/Admin/AppointmentController.php
+    - app/Http/Controllers/Admin/ServiceController.php
+    - app/Http/Controllers/Admin/OperationController.php
+    - app/Http/Controllers/Admin/MedicineController.php
+    - app/Http/Controllers/Admin/PrescriptionController.php
+    - app/Http/Controllers/Admin/EntryController.php
+    - app/Http/Controllers/Admin/MaterialController.php
+    - app/Http/Controllers/Admin/ExpenseController.php
+    - app/Http/Controllers/Admin/EmployeeController.php
+    - database/factories/Models/DoctorFactory.php
+    - database/factories/Models/PatientFactory.php
+    - database/factories/Models/AppointmentFactory.php
+    - database/factories/Models/ServiceFactory.php
+    - database/factories/Models/OperationFactory.php
+    - database/factories/Models/MedicineFactory.php
+    - database/factories/Models/PrescriptionFactory.php
+    - database/factories/Models/EntryFactory.php
+    - database/factories/Models/MaterialFactory.php
+    - database/factories/Models/ExpenceFactory.php
+    - database/factories/Models/EmployeeFactory.php
+    - database/migrations/2021_01_17_042121_create_doctors_table.php
+    - database/migrations/2021_01_17_042122_create_patients_table.php
+    - database/migrations/2021_01_17_042123_create_appointments_table.php
+    - database/migrations/2021_01_17_042124_create_services_table.php
+    - database/migrations/2021_01_17_042125_create_operations_table.php
+    - database/migrations/2021_01_17_042126_create_medicines_table.php
+    - database/migrations/2021_01_17_042127_create_prescriptions_table.php
+    - database/migrations/2021_01_17_042128_create_entries_table.php
+    - database/migrations/2021_01_17_042129_create_materials_table.php
+    - database/migrations/2021_01_17_042130_create_expences_table.php
+    - database/migrations/2021_01_17_042131_create_employees_table.php
+    - app/Models/Doctor.php
+    - app/Models/Patient.php
+    - app/Models/Appointment.php
+    - app/Models/Service.php
+    - app/Models/Operation.php
+    - app/Models/Medicine.php
+    - app/Models/Prescription.php
+    - app/Models/Entry.php
+    - app/Models/Material.php
+    - app/Models/Expence.php
+    - app/Models/Employee.php
+    - database/seeders/DoctorSeeder.php
+    - database/seeders/PatientSeeder.php
+    - database/seeders/AppointmentSeeder.php
+    - database/seeders/AppointmentSeeder.php
+    - database/seeders/ServiceSeeder.php
+    - database/seeders/MedicineSeeder.php
+    - database/seeders/MaterialSeeder.php
+    - database/seeders/EmployeeSeeder.php
+    - tests/Feature/Http/Controllers/Admin/DoctorControllerTest.php
+    - tests/Feature/Http/Controllers/Admin/PatientControllerTest.php
+    - tests/Feature/Http/Controllers/Admin/AppointmentControllerTest.php
+    - tests/Feature/Http/Controllers/Admin/ServiceControllerTest.php
+    - tests/Feature/Http/Controllers/Admin/OperationControllerTest.php
+    - tests/Feature/Http/Controllers/Admin/MedicineControllerTest.php
+    - tests/Feature/Http/Controllers/Admin/PrescriptionControllerTest.php
+    - tests/Feature/Http/Controllers/Admin/EntryControllerTest.php
+    - tests/Feature/Http/Controllers/Admin/MaterialControllerTest.php
+    - tests/Feature/Http/Controllers/Admin/ExpenseControllerTest.php
+    - tests/Feature/Http/Controllers/Admin/EmployeeControllerTest.php
+    - resources/views/doctors/index.blade.php
+    - resources/views/doctors/show.blade.php
+    - resources/views/doctors/edit.blade.php
+    - resources/views/doctors/create.blade.php
+    - resources/views/patients/index.blade.php
+    - resources/views/patients/show.blade.php
+    - resources/views/patients/edit.blade.php
+    - resources/views/patients/create.blade.php
+    - resources/views/appointments/index.blade.php
+    - resources/views/appointments/show.blade.php
+    - resources/views/appointments/edit.blade.php
+    - resources/views/appointments/create.blade.php
+    - resources/views/services/index.blade.php
+    - resources/views/services/show.blade.php
+    - resources/views/services/edit.blade.php
+    - resources/views/services/create.blade.php
+    - resources/views/operations/index.blade.php
+    - resources/views/operations/show.blade.php
+    - resources/views/operations/edit.blade.php
+    - resources/views/operations/create.blade.php
+    - resources/views/medicines/index.blade.php
+    - resources/views/medicines/show.blade.php
+    - resources/views/medicines/edit.blade.php
+    - resources/views/medicines/create.blade.php
+    - resources/views/prescriptions/index.blade.php
+    - resources/views/prescriptions/show.blade.php
+    - resources/views/prescriptions/edit.blade.php
+    - resources/views/prescriptions/create.blade.php
+    - resources/views/entries/index.blade.php
+    - resources/views/entries/show.blade.php
+    - resources/views/entries/edit.blade.php
+    - resources/views/entries/create.blade.php
+    - resources/views/materials/index.blade.php
+    - resources/views/materials/show.blade.php
+    - resources/views/materials/edit.blade.php
+    - resources/views/materials/create.blade.php
+    - resources/views/expenses/index.blade.php
+    - resources/views/expenses/show.blade.php
+    - resources/views/expenses/edit.blade.php
+    - resources/views/expenses/create.blade.php
+    - resources/views/employees/index.blade.php
+    - resources/views/employees/show.blade.php
+    - resources/views/employees/edit.blade.php
+    - resources/views/employees/create.blade.php
+updated:
+    - routes/web.php
+models:
+    Models\Doctor: { name: string, gender: 'enum:male,female', picture: 'string nullable', phone: 'string nullable', email: 'string nullable', birth_date: date, percentage: 'decimal:8,2', specialty: 'string nullable', timestamps: timestamps, relationships: { hasMany: 'Appointment, Operation, Prescription' } }
+    Models\Patient: { name: string, phone: string, email: string, birth_date: date, gender: 'enum:male,female', blood_type: 'string nullable', notes: 'text nullable', status: 'enum:contenue,finish', payment: 'enum:cash,card,check', debt: double, payed: double, timestamps: timestamps, relationships: { hasMany: 'Appointment, Operation, Prescription' } }
+    Models\Appointment: { doctor_id: 'id foreign:doctors', patient_id: 'id foreign:patients', date: date, time: time, timestamps: timestamps, relationships: { belongsTo: 'Doctor,Patient' } }
+    Models\Service: { name: string, price: 'decimal:8,2', relationships: { hasMany: Operation } }
+    Models\Operation: { service_id: 'id foreign:services', doctor_id: 'id foreign:doctors', patient_id: 'id foreign:patients', lab: 'decimal:8,2 nullable', price: 'decimal:8,2', notes: 'text nullable', timestamps: timestamps, relationships: { belongsTo: 'Service,Doctor,Patient' } }
+    Models\Medicine: { name: string }
+    Models\Prescription: { date: date, doctor_id: 'id foreign:doctors', patient_id: 'id foreign:patients', relationships: { belongsTo: 'Doctor,Patient', hasMany: Entry } }
+    Models\Entry: { medicine_id: 'id foreign:medicines', prescription_id: 'id foreign:prescriptions', rx: string, relationships: { belongsTo: 'Medicine,Prescription' } }
+    Models\Material: { code: string }
+    Models\Expence: { material_id: 'id foreign:materials', price: 'decimal:8,2', invoice: string, relationships: { belongsTo: Material } }
+    Models\Employee: { name: string, gender: 'enum:male,female', phone: 'string nullable', job: 'string nullable', salary: 'decimal:8,2 nullable' }
