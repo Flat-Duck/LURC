@@ -1,26 +1,226 @@
 models:
-  Post:
-    title: string:400
-    content: longtext
-    published_at: nullable timestamp
+  Models\Doctor:
+    name: string
+    gender: enum:male,female
+    picture: string nullable
+    phone: string nullable
+    email: string nullable
+    birth_date: date
+    percentage: decimal:8,2
+    specialty: string nullable
+    timestamps: true
+    relationships:
+      hasMany: Appointment, Operation, Prescription
+      
+  Models\Patient:
+    name: string
+    phone: string 
+    email: string
+    birth_date: date
+    gender: enum:male,female
+    blood_type: string nullable 
+    notes: text nullable
+    status: enum:contenue,finish
+    payment: enum:cash,card,check
+    debt: double
+    payed: double
+    timestamps: true
+    relationships:
+      hasMany: Appointment, Operation, Prescription
+  
+  Models\Appointment:
+    doctor_id: id foreign:doctors
+    patient_id: id foreign:patients
+    date: date
+    time: time
+    timestamps: true
+    relationships:
+       belongsTo: Doctor,Patient
 
+  Models\Service:
+    name: string
+    price: decimal:8,2
+    relationships:
+      hasMany: Operation
+
+  Models\Operation:
+    service_id: id foreign:services
+    doctor_id: id foreign:doctors
+    patient_id: id foreign:patients
+    lab:  decimal:8,2 nullable
+    price: decimal:8,2
+    notes: text nullable
+    timestamps: true
+    relationships:
+       belongsTo: Service,Doctor,Patient
+
+  Models\Medicine:
+    name: string
+
+  Models\Prescription:
+    date: date
+    doctor_id: id foreign:doctors
+    patient_id: id foreign:patients
+    relationships:
+       belongsTo: Doctor,Patient
+       hasMany: Entry
+
+  Models\Entry:
+    medicine_id: id foreign:medicines
+    prescription_id: id foreign:prescriptions
+    rx: string
+    relationships:
+       belongsTo: Medicine,Prescription
+
+  Models\Material:
+    code: string
+
+  Models\Expence:
+    material_id: id foreign:materials
+    price: decimal:8,2
+    invoice: string
+    relationships:
+       belongsTo: Material
+
+
+  Models\Employee:
+    name: string
+    gender: enum:male,female
+    phone: string nullable
+    job: string nullable
+    salary: decimal:8,2 nullable
+    
 controllers:
-  Post:
+
+  Admin\Doctor:
     index:
-      query: all
-      render: post.index with:posts
-
+      render: doctors.index with:doctors
     show:
-      render: post.show with:post
-
+      render: doctors.show with:doctor
+    edit:
+      render: doctors.show with:doctor
     create:
-      render: post.create
+      render: doctors.create
+      
+  Admin\Patient:
+    index:
+      render: patients.index with:patients
+    show:
+      render: patients.show with:patient
+    edit:
+      render: patients.show with:patient
+    create:
+      render: patients.create
+  
+  Admin\Appointment:
+    index:
+      render: appointments.index with:appointments
+    show:
+      render: appointments.show with:appointment
+    edit:
+      render: appointments.show with:appointment
+    create:
+      render: appointments.create
 
-    store:
-      validate: title, content
-      save: post
-      send: ReviewNotification to:post.author with:post
-      dispatch: SyncMedia with:post
-      fire: NewPost with:post
-      flash: post.title
-      redirect: post.index
+  Admin\Service:
+    index:
+      render: services.index with:services
+    show:
+      render: services.show with:services
+    edit:
+      render: services.show with:services
+    create:
+      render: services.create
+
+  Admin\Operation:
+    index:
+      render: operations.index with:operations
+    show:
+      render: operations.show with:operations
+    edit:
+      render: operations.show with:operations
+    create:
+      render: operations.create
+
+  Admin\Medicine:
+    index:
+      render: medicines.index with:medicines
+    show:
+      render: medicines.show with:medicines
+    edit:
+      render: medicines.show with:medicines
+    create:
+      render: medicines.create
+
+  Admin\Prescription:
+    index:
+      render: prescriptions.index with:prescriptions
+    show:
+      render: prescriptions.show with:prescriptions
+    edit:
+      render: prescriptions.show with:prescriptions
+    create:
+      render: prescriptions.create
+
+  Admin\Entry:
+    index:
+      render: entries.index with:entries
+    show:
+      render: entries.show with:entrie
+    edit:
+      render: entries.show with:entrie
+    create:
+      render: entries.create
+
+  Admin\Material:
+    index:
+      render: materials.index with:materials
+    show:
+      render: materials.show with:materials
+    edit:
+      render: materials.show with:materials
+    create:
+      render: materials.create
+
+  Admin\Expense:
+    index:
+      render: expenses.index with:expenses
+    show:
+      render: expenses.show with:expenses
+    edit:
+      render: expenses.show with:expenses
+    create:
+      render: expenses.create
+
+
+  Admin\Employee:
+    index:
+      render: employees.index with:employees
+    show:
+      render: employees.show with:employees
+    edit:
+      render: employees.show with:employees
+    create:
+      render: employees.create
+
+seeders: Doctor, Patient,Appointment,Appointment,Service,Medicine,Material,Employee
+
+
+
+    # index:
+    #   render: post.index with:posts
+    # show:
+    #   render: post.show with:post
+    # create:
+    #   render: post.create
+
+  # Models\Invoice:
+  #   code: string
+  #   date: date
+
+  # Models\Record:
+  #   medicine_id: id foreign:medicines
+  #   dosage: int
+  #   days: int
+  #   prescription_id: id foreign:prescriptions
+  
